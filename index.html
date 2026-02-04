@@ -1,122 +1,0 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام ديون السيارات</title>
-    
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
-</head>
-<body class="p-4 md:p-8 select-none">
-
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900">
-        <div class="glass p-8 rounded-2xl w-full max-w-md text-center border border-slate-700 shadow-2xl">
-            <h2 class="text-2xl font-bold mb-6 text-blue-400">نظام الديون <br><span class="text-xs text-slate-500 font-normal">أدخل الرمز السري للمتابعة</span></h2>
-            <input type="password" id="passcode" class="input-field text-center text-2xl tracking-widest mb-4" placeholder="••••" inputmode="numeric">
-            <button onclick="app.checkAccess()" class="btn-primary w-full py-3 rounded-xl font-bold text-lg">دخول النظام 🔓</button>
-            <p id="login-msg" class="mt-4 text-xs text-red-400"></p>
-        </div>
-    </div>
-
-    <div id="main-app" class="hidden max-w-5xl mx-auto pb-20">
-        
-        <header class="flex justify-between items-center mb-6 glass p-4 rounded-xl sticky top-0 z-40">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-car-side text-blue-500 text-2xl"></i>
-                <div>
-                    <h1 class="text-lg font-bold text-slate-100">إدارة الديون</h1>
-                    <p class="text-[10px] text-green-400">● متصل بالنظام</p>
-                </div>
-            </div>
-            <button onclick="app.logout()" class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500/20"><i class="fas fa-power-off"></i></button>
-        </header>
-
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <button onclick="app.showSection('add')" class="p-4 glass rounded-xl text-center hover:bg-slate-800 transition border border-slate-700">
-                <i class="fas fa-plus-circle text-2xl text-green-500 mb-2"></i>
-                <div class="font-bold text-sm">إضافة دين</div>
-            </button>
-            <button onclick="app.showSection('list')" class="p-4 glass rounded-xl text-center hover:bg-slate-800 transition border border-slate-700">
-                <i class="fas fa-list-alt text-2xl text-blue-500 mb-2"></i>
-                <div class="font-bold text-sm">سجل الديون</div>
-            </button>
-        </div>
-
-        <section id="add-section" class="glass p-5 rounded-2xl mb-8 border border-slate-700 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-2 h-full bg-green-500/50"></div>
-            <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="far fa-edit text-green-400"></i> بيانات الزبون</h3>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="text-xs text-slate-400 px-1">اسم الزبون</label>
-                    <input type="text" id="cust-name" class="input-field" placeholder="الاسم الثلاثي">
-                </div>
-                
-                <div>
-                    <label class="text-xs text-slate-400 px-1">تفاصيل السيارة</label>
-                    <input type="text" id="car-detail" class="input-field" placeholder="نوع السيارة / اللون / الرقم">
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-xs text-slate-400 px-1">رقم الهاتف</label>
-                        <input type="tel" id="cust-phone" class="input-field" placeholder="07...">
-                    </div>
-                    <div>
-                        <label class="text-xs text-slate-400 px-1">العملة</label>
-                        <select id="currency" class="input-field">
-                            <option value="IQD">دينار (IQD)</option>
-                            <option value="USD">دولار ($)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="p-4 bg-slate-800/50 rounded-xl border border-dashed border-slate-600">
-                    <div class="flex justify-between items-center mb-2">
-                        <label class="text-sm font-bold text-blue-300">الحسابات المالية</label>
-                        <i class="fas fa-calculator text-slate-500"></i>
-                    </div>
-                    <input type="number" id="total-amount" class="input-field mb-2" placeholder="المبلغ الكلي للدين">
-                    <input type="number" id="paid-amount" class="input-field" placeholder="الواصل (الدفعة الأولى)">
-                </div>
-            </div>
-
-            <button onclick="app.saveDebt()" class="btn-primary w-full mt-6 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/20 flex justify-center items-center gap-2">
-                <i class="fas fa-save"></i> حفظ في السجل
-            </button>
-        </section>
-
-        <section id="list-section" class="hidden">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="text-lg font-bold text-slate-200">السجلات المحفوظة</h3>
-                <button onclick="app.exportData()" class="text-xs bg-slate-800 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-600 hover:bg-slate-700">
-                    <i class="fas fa-file-export mr-1"></i> نسخة احتياطية
-                </button>
-            </div>
-            
-            <div id="debts-container" class="space-y-3 pb-10">
-                </div>
-            
-            <div id="empty-msg" class="hidden text-center py-10 opacity-50">
-                <i class="fas fa-box-open text-4xl mb-2 text-slate-600"></i>
-                <p>لا توجد ديون مسجلة حالياً</p>
-            </div>
-        </section>
-
-    </div>
-
-    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-xl border border-slate-600 flex items-center gap-3 transition-all duration-300 translate-y-20 opacity-0 z-50">
-        <i class="fas fa-check-circle text-green-500"></i>
-        <span id="toast-msg">تمت العملية بنجاح</span>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-</html>
